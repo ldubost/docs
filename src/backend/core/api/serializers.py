@@ -735,3 +735,12 @@ class MoveDocumentSerializer(serializers.Serializer):
         choices=enums.MoveNodePositionChoices.choices,
         default=enums.MoveNodePositionChoices.LAST_CHILD,
     )
+
+
+class AttachmentSerializer(serializers.Serializer):
+    """Serializer for document attachments (id and name)."""
+    def to_representation(self, obj):
+        return {
+            "id": obj,
+            "name": obj.split("/")[-1] if "/" in obj else obj,
+        }

@@ -1160,6 +1160,7 @@ class DocumentViewSet(
             "Metadata": {
                 "owner": str(request.user.id),
                 "status": enums.DocumentAttachmentStatus.PROCESSING,
+                "filename": serializer.validated_data["file_name"],
             },
             "ContentType": serializer.validated_data["content_type"],
         }
@@ -1465,6 +1466,30 @@ class DocumentViewSet(
                 {"error": f"Failed to fetch resource: {e!s}"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @drf.decorators.action(
+        detail=True,
+        methods=["get"],
+        url_path="attachments_list",
+    )
+    def attachments_list(self, request, *args, **kwargs):
+        """
+        Retrieve the list of attachments for a document, including id and name (from S3 metadata if available).
+        """
+        document = self.get_object()
+        s3_client = default_storage.connection.meta.client
+        bucket_name = default_storage.bucket_name
+        attachments = []
+        for key in document.attachments:
+            try:
+                head = s3_client.head_object(Bucket=bucket_name, Key=key)
+                name = head.get("Metadata", {}).get("filename")
+                if not name:
+                    name = key.split("/")[-1]
+            except Exception:
+                name = key.split("/")[-1]
+            attachments.append({"id": key, "name": name})
+        return drf.response.Response(attachments)
 
 
 class DocumentAccessViewSet(

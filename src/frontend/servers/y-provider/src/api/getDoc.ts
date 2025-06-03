@@ -35,6 +35,7 @@ interface Doc {
     ai_transform: boolean;
     ai_translate: boolean;
     attachment_upload: boolean;
+    attachments_list: boolean;
     children_create: boolean;
     children_list: boolean;
     collaboration_auth: boolean;

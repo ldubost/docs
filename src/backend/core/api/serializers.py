@@ -742,5 +742,5 @@ class AttachmentSerializer(serializers.Serializer):
     def to_representation(self, obj):
         return {
             "id": obj,
-            "name": obj.split("/")[-1] if "/" in obj else obj,
+            "name": obj.split("/")[-1] if "/" in obj else obj
         }

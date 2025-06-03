@@ -1474,7 +1474,7 @@ class DocumentViewSet(
     )
     def attachments_list(self, request, *args, **kwargs):
         """
-        Retrieve the list of attachments for a document, including id and name (from S3 metadata if available).
+        Retrieve the list of attachments for a document, including id, name, owner, mimetype, and size.
         """
         document = self.get_object()
         s3_client = default_storage.connection.meta.client
@@ -1483,12 +1483,23 @@ class DocumentViewSet(
         for key in document.attachments:
             try:
                 head = s3_client.head_object(Bucket=bucket_name, Key=key)
-                name = head.get("Metadata", {}).get("filename")
-                if not name:
-                    name = key.split("/")[-1]
+                metadata = head.get("Metadata", {})
+                name = metadata.get("filename") or key.split("/")[-1]
+                owner = metadata.get("owner")
+                mimetype = head.get("ContentType")
+                size = head.get("ContentLength")
             except Exception:
                 name = key.split("/")[-1]
-            attachments.append({"id": key, "name": name})
+                owner = None
+                mimetype = None
+                size = None
+            attachments.append({
+                "id": key,
+                "name": name,
+                "owner": owner,
+                "mimetype": mimetype,
+                "size": size,
+            })
         return drf.response.Response(attachments)
 
 
